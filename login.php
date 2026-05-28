@@ -1,7 +1,10 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/security.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/auth_helpers.php';
+
+sendNoStoreHeaders();
 
 ensureAuthSchema($conn);
 
@@ -10,6 +13,7 @@ if (isset($_SESSION['user_id']))  { header('Location: user_dashboard.php'); exit
 
 $error = '';
 $role  = $_POST['role'] ?? $_GET['role'] ?? '';
+$loggedOut = isset($_GET['logged_out']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $username = trim($_POST['username'] ?? '');
@@ -29,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $admin = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if ($admin && ($admin['password'] === $password || password_verify($password, $admin['password']))) {
+                session_regenerate_id(true);
                 $_SESSION['admin_id'] = $admin['id'];
                 $_SESSION['username'] = $admin['username'];
                 $_SESSION['role']     = 'admin';
@@ -53,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             if ($user['status'] !== 'Active') {
                 $error = 'Your account is inactive. Please contact the clinic.';
             } else {
+                session_regenerate_id(true);
                 $_SESSION['user_id']    = $user['user_id'];
                 $_SESSION['user_name']  = $user['full_name'];
                 $_SESSION['student_id'] = $user['student_id'];
@@ -371,6 +377,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
   </style>
 </head>
 <body>
+<?php if ($loggedOut): ?>
+<script>
+  history.replaceState(null, '', 'login.php');
+  history.pushState(null, '', 'login.php');
+  window.addEventListener('popstate', () => {
+    history.pushState(null, '', 'login.php');
+  });
+</script>
+<?php endif; ?>
 
 <!-- Floating orbs -->
 <div class="orb orb1"></div>

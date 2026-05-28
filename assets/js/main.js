@@ -13,6 +13,31 @@ function showToast(msg, type = 'info') {
   toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
 }
 
+async function verifyActiveSession() {
+  try {
+    const response = await fetch('auth_status.php?ts=' + Date.now(), {
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    const status = await response.json();
+    if (!status.authenticated) {
+      window.location.replace('login.php');
+    }
+  } catch (error) {
+    window.location.reload();
+  }
+}
+
+window.addEventListener('pageshow', event => {
+  const nav = performance.getEntriesByType?.('navigation')?.[0];
+  if (event.persisted || nav?.type === 'back_forward') {
+    verifyActiveSession();
+  }
+});
+
+window.addEventListener('focus', verifyActiveSession);
+
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ── AUTO-DISMISS ALERTS ── */

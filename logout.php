@@ -1,14 +1,10 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/security.php';
 
-session_unset();
-session_destroy();
+sendNoStoreHeaders();
+destroyCurrentSession();
 
-/* Prevent browser cache */
-header("Cache-Control: no-cache, no-store, must-revalidate");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-header('Location: login.php');
+header('Location: login.php?logged_out=1');
 exit();
 ?>

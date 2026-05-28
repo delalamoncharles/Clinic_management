@@ -1,14 +1,14 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/security.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+
+sendNoStoreHeaders();
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php'); exit();
 }
-
-header('Cache-Control: no store, no cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
 
 $user_id    = $_SESSION['user_id'];
 $user_name  = $_SESSION['user_name'];
@@ -394,8 +394,6 @@ $flashSuccess = isset($_GET['success']) ? 'Medicine request submitted successful
 
 <!-- LAYOUT -->
 <div class="layout">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Navigation</div>
@@ -449,7 +447,7 @@ $flashSuccess = isset($_GET['success']) ? 'Medicine request submitted successful
 
     <!-- Page Header -->
     <div class="page-header">
-      <h1>Welcome, <?= htmlspecialchars(explode(' ', $user_name)[0]) ?>! 👋</h1>
+      <h1>Welcome, <?= htmlspecialchars(explode(' ', $user_name)[0]) ?>! <i class="fas fa-hand" style="color:#00f5ff;font-size:.85em;"></i></h1>
       <p>Student ID: <span style="font-family:'DM Mono',monospace;color:#00f5ff"><?= htmlspecialchars($student_id) ?></span> — <?= date('F d, Y') ?></p>
     </div>
 
@@ -566,6 +564,31 @@ $flashSuccess = isset($_GET['success']) ? 'Medicine request submitted successful
 
 <div id="toast" class="toast"></div>
 <script>
+async function verifyActiveSession() {
+  try {
+    const response = await fetch('auth_status.php?ts=' + Date.now(), {
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    const status = await response.json();
+    if (!status.authenticated) {
+      window.location.replace('login.php');
+    }
+  } catch (error) {
+    window.location.reload();
+  }
+}
+
+window.addEventListener('pageshow', event => {
+  const nav = performance.getEntriesByType?.('navigation')?.[0];
+  if (event.persisted || nav?.type === 'back_forward') {
+    verifyActiveSession();
+  }
+});
+
+window.addEventListener('focus', verifyActiveSession);
+
 let toastTimer;
 function showToast(msg, type='info') {
   const t = document.getElementById('toast');

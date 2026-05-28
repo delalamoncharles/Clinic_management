@@ -1,10 +1,9 @@
 <?php
 session_start();
+require_once __DIR__ . '/security.php';
 
 /* Prevent browser cache */
-header("Cache-Control: no-cache, no-store, must-revalidate");
-header("Pragma: no-cache");
-header("Expires: 0");
+sendNoStoreHeaders();
 
 function isLoggedIn() {
     return isset($_SESSION['admin_id']) && !empty($_SESSION['admin_id']);
@@ -16,16 +15,6 @@ function requireLogin() {
         header("Location: login.php");
         exit();
     }
-
-    // Prevent browser back cache
-    echo '
-    <script>
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = function () {
-            window.location.href = "login.php";
-        };
-    </script>
-    ';
 }
 
 function getCurrentUser() {

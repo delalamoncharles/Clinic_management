@@ -1,15 +1,15 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/security.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+
+sendNoStoreHeaders();
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
-
-header('Cache-Control: no store, no cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
 
 $user_id    = $_SESSION['user_id'];
 $user_name  = $_SESSION['user_name'];
@@ -90,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Profile — Clinic</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -109,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <span><?= htmlspecialchars($user_name) ?></span>
       <span class="user-role">· Student</span>
     </div>
-    <a href="user_profile.php" class="btn btn-secondary btn-sm">⚙ Profile</a>
+    <a href="user_profile.php" class="btn btn-secondary btn-sm"><i class="fas fa-gear"></i> Profile</a>
     <a href="user_logout.php"  class="btn btn-secondary btn-sm">Sign Out</a>
   </div>
 </div>
@@ -119,17 +120,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="sidebar-section">
       <div class="sidebar-label">Navigation</div>
       <a href="user_dashboard.php" class="nav-item">
-        <span class="nav-icon">🏠</span> Dashboard
+        <span class="nav-icon"><i class="fas fa-house"></i></span> Dashboard
       </a>
       <a href="user_medicines.php" class="nav-item">
-        <span class="nav-icon">💊</span> View Medicines
+        <span class="nav-icon"><i class="fas fa-pills"></i></span> View Medicines
       </a>
       <a href="user_requests.php" class="nav-item">
-        <span class="nav-icon">📋</span> My Requests
+        <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span> My Requests
       </a>
       <a href="health_check.php" class="nav-item">
-  <span class="nav-icon">❤️</span> Health Check
-</a>
+        <span class="nav-icon"><i class="fas fa-heart-pulse"></i></span> Health Check
+      </a>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-build">Student Portal v1.0</div>
@@ -147,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <?php if ($success): ?>
-      <div class="alert alert-success" data-auto-dismiss>✅ <?= htmlspecialchars($success) ?></div>
+      <div class="alert alert-success" data-auto-dismiss><i class="fas fa-circle-check"></i> <?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
     <?php if (!empty($errors)): ?>
       <div class="alert alert-error" data-auto-dismiss>
@@ -163,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Avatar -->
         <div style="display:flex;align-items:center;gap:16px;padding:20px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:24px;">
           <div style="width:60px;height:60px;background:linear-gradient(135deg,#3fb950,#58a6ff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">
-            👤
+            <i class="fas fa-user-graduate"></i>
           </div>
           <div>
             <div style="font-size:18px;font-weight:600;"><?= htmlspecialchars($user['full_name']) ?></div>
@@ -217,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    placeholder="your@email.com">
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block">💾 Save Changes</button>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-floppy-disk"></i> Save Changes</button>
         </form>
       </div>
 
@@ -251,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    placeholder="Repeat new password" required>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block">🔐 Update Password</button>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-lock"></i> Update Password</button>
         </form>
 
         <!-- Account Info -->

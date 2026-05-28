@@ -1,18 +1,25 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/security.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+
+sendNoStoreHeaders();
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-header('Cache-Control: no store, no cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-
+$user_id    = $_SESSION['user_id'];
 $user_name  = $_SESSION['user_name'];
 $student_id = $_SESSION['student_id'];
+
+$userStmt = $conn->prepare("SELECT * FROM users WHERE user_id = ?");
+$userStmt->bind_param("i", $user_id);
+$userStmt->execute();
+$user = $userStmt->get_result()->fetch_assoc();
+$userStmt->close();
 
 // Search and filter
 $search   = trim($_GET['search']   ?? '');
@@ -56,6 +63,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Available Medicines — Clinic</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -75,7 +83,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
       <span><?= htmlspecialchars($user_name) ?></span>
       <span class="user-role">· Student</span>
     </div>
-    <a href="user_profile.php" class="btn btn-secondary btn-sm">⚙ Profile</a>
+    <a href="user_profile.php" class="btn btn-secondary btn-sm"><i class="fas fa-gear"></i> Profile</a>
     <a href="user_logout.php"  class="btn btn-secondary btn-sm">Sign Out</a>
   </div>
 </div>
@@ -85,19 +93,32 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
     <div class="sidebar-section">
       <div class="sidebar-label">Navigation</div>
       <a href="user_dashboard.php" class="nav-item">
-        <span class="nav-icon">🏠</span> Dashboard
+        <span class="nav-icon"><i class="fas fa-house"></i></span> Dashboard
       </a>
       <a href="user_medicines.php" class="nav-item active">
-        <span class="nav-icon">💊</span> View Medicines
+        <span class="nav-icon"><i class="fas fa-pills"></i></span> View Medicines
       </a>
       <a href="user_requests.php" class="nav-item">
-        <span class="nav-icon">📋</span> My Requests
+        <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span> My Requests
       </a>
       <a href="health_check.php" class="nav-item">
-  <span class="nav-icon">❤️</span> Health Check
-</a>
+        <span class="nav-icon"><i class="fas fa-heart-pulse"></i></span> Health Check
+      </a>
     </div>
     <div class="sidebar-footer">
+      <a href="user_profile.php" class="sidebar-profile">
+        <div class="sidebar-avatar">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div>
+          <div class="sidebar-profile-name">
+            <?= htmlspecialchars($user_name) ?>
+          </div>
+          <div class="sidebar-profile-role">
+            <?= htmlspecialchars($user['grade'] ?: 'Student') ?>
+          </div>
+        </div>
+      </a>
       <div class="sidebar-build">Student Portal v1.0</div>
       <div class="sidebar-build">© <?= date('Y') ?> ICAS School Clinic</div>
     </div>
@@ -116,7 +137,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
     <form method="GET" action="user_medicines.php">
       <div class="table-toolbar" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><i class="fas fa-magnifying-glass"></i></span>
           <input type="text" name="search"
                  value="<?= htmlspecialchars($search) ?>"
                  placeholder="Search medicines…"
@@ -132,7 +153,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
             <?php endforeach; ?>
           </select>
           <?php if ($search || $category): ?>
-            <a href="user_medicines.php" class="btn btn-secondary btn-sm">✕ Clear</a>
+            <a href="user_medicines.php" class="btn btn-secondary btn-sm"><i class="fas fa-xmark"></i> Clear</a>
           <?php endif; ?>
         </div>
       </div>
@@ -152,9 +173,9 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
             <img src="assets/uploads/medicines/<?= htmlspecialchars($m['image']) ?>"
                  style="width:100%;height:100%;object-fit:cover;"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:48px;opacity:.3">💊</div>
+            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:48px;opacity:.3"><i class="fas fa-pills"></i></div>
           <?php else: ?>
-            <span style="font-size:48px;opacity:0.3">💊</span>
+            <span style="font-size:48px;opacity:0.3"><i class="fas fa-pills"></i></span>
           <?php endif; ?>
         </div>
 
@@ -183,7 +204,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
           <button onclick="openRequestModal(<?= $m['medicine_id'] ?>, '<?= htmlspecialchars($m['medicine_name'], ENT_QUOTES) ?>', <?= $m['quantity'] ?>)"
                   class="btn btn-primary btn-sm"
                   style="width:100%;justify-content:center;">
-            📨 Request
+            <i class="fas fa-paper-plane"></i> Request
           </button>
         </div>
       </div>
@@ -191,7 +212,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
     </div>
     <?php else: ?>
       <div class="empty-state">
-        <span class="empty-icon">💊</span>
+        <span class="empty-icon"><i class="fas fa-pills"></i></span>
         <p>No medicines available at the moment.</p>
       </div>
     <?php endif; ?>
@@ -206,7 +227,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
       <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Request Medicine</h2>
       <button onclick="closeRequestModal()"
-              style="background:#1c2333;border:1px solid #30363d;border-radius:6px;width:32px;height:32px;color:#8b949e;font-size:18px;cursor:pointer;">✕</button>
+              style="background:#1c2333;border:1px solid #30363d;border-radius:6px;width:32px;height:32px;color:#8b949e;font-size:18px;cursor:pointer;"><i class="fas fa-xmark"></i></button>
     </div>
 
     <form method="POST" action="user_dashboard.php">
@@ -237,7 +258,7 @@ while ($r = $cats->fetch_assoc()) $categories[] = $r['category'];
 
       <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid #30363d;">
         <button type="button" onclick="closeRequestModal()" class="btn btn-secondary">Cancel</button>
-        <button type="submit" class="btn btn-primary">📨 Submit Request</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Request</button>
       </div>
     </form>
   </div>

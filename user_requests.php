@@ -1,19 +1,25 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/security.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+
+sendNoStoreHeaders();
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
 
-header('Cache-Control: no store, no cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-
 $user_id    = $_SESSION['user_id'];
 $user_name  = $_SESSION['user_name'];
 $student_id = $_SESSION['student_id'];
+
+$userStmt = $conn->prepare("SELECT * FROM users WHERE user_id = ?");
+$userStmt->bind_param("i", $user_id);
+$userStmt->execute();
+$user = $userStmt->get_result()->fetch_assoc();
+$userStmt->close();
 
 // Get all requests for this user
 $stmt = $conn->prepare("
@@ -51,6 +57,7 @@ $rejectedCount = $rejected->get_result()->fetch_assoc()['c'];
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Requests — Clinic</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -70,7 +77,7 @@ $rejectedCount = $rejected->get_result()->fetch_assoc()['c'];
       <span><?= htmlspecialchars($user_name) ?></span>
       <span class="user-role">· Student</span>
     </div>
-    <a href="user_profile.php" class="btn btn-secondary btn-sm">⚙ Profile</a>
+    <a href="user_profile.php" class="btn btn-secondary btn-sm"><i class="fas fa-gear"></i> Profile</a>
     <a href="user_logout.php"  class="btn btn-secondary btn-sm">Sign Out</a>
   </div>
 </div>
@@ -80,19 +87,32 @@ $rejectedCount = $rejected->get_result()->fetch_assoc()['c'];
     <div class="sidebar-section">
       <div class="sidebar-label">Navigation</div>
       <a href="user_dashboard.php" class="nav-item">
-        <span class="nav-icon">🏠</span> Dashboard
+        <span class="nav-icon"><i class="fas fa-house"></i></span> Dashboard
       </a>
       <a href="user_medicines.php" class="nav-item">
-        <span class="nav-icon">💊</span> View Medicines
+        <span class="nav-icon"><i class="fas fa-pills"></i></span> View Medicines
       </a>
       <a href="user_requests.php" class="nav-item active">
-        <span class="nav-icon">📋</span> My Requests
+        <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span> My Requests
       </a>
       <a href="health_check.php" class="nav-item">
-  <span class="nav-icon">❤️</span> Health Check
-</a>
+        <span class="nav-icon"><i class="fas fa-heart-pulse"></i></span> Health Check
+      </a>
     </div>
     <div class="sidebar-footer">
+      <a href="user_profile.php" class="sidebar-profile">
+        <div class="sidebar-avatar">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div>
+          <div class="sidebar-profile-name">
+            <?= htmlspecialchars($user_name) ?>
+          </div>
+          <div class="sidebar-profile-role">
+            <?= htmlspecialchars($user['grade'] ?: 'Student') ?>
+          </div>
+        </div>
+      </a>
       <div class="sidebar-build">Student Portal v1.0</div>
       <div class="sidebar-build">© <?= date('Y') ?> ICAS School Clinic</div>
     </div>
@@ -113,25 +133,25 @@ $rejectedCount = $rejected->get_result()->fetch_assoc()['c'];
         <div class="stat-label">Total</div>
         <div class="stat-value"><?= $totalCount ?></div>
         <div class="stat-sub">all requests</div>
-        <div class="stat-icon">📋</div>
+        <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
       </div>
       <div class="stat-card yellow">
         <div class="stat-label">Pending</div>
         <div class="stat-value"><?= $pendingCount ?></div>
         <div class="stat-sub">awaiting approval</div>
-        <div class="stat-icon">⏳</div>
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
       </div>
       <div class="stat-card green">
         <div class="stat-label">Approved</div>
         <div class="stat-value"><?= $approvedCount ?></div>
         <div class="stat-sub">approved</div>
-        <div class="stat-icon">✅</div>
+        <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
       </div>
       <div class="stat-card red">
         <div class="stat-label">Rejected</div>
         <div class="stat-value"><?= $rejectedCount ?></div>
         <div class="stat-sub">rejected</div>
-        <div class="stat-icon">❌</div>
+        <div class="stat-icon"><i class="fas fa-circle-xmark"></i></div>
       </div>
     </div>
 
@@ -142,7 +162,7 @@ $rejectedCount = $rejected->get_result()->fetch_assoc()['c'];
           <h3>All Medicine Requests</h3>
           <p>Complete history of your requests</p>
         </div>
-        <a href="user_medicines.php" class="btn btn-primary btn-sm">➕ New Request</a>
+        <a href="user_medicines.php" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Request</a>
       </div>
       <table>
         <thead><tr>
@@ -171,7 +191,7 @@ $rejectedCount = $rejected->get_result()->fetch_assoc()['c'];
                      style="width:38px;height:38px;object-fit:cover;border-radius:8px;border:1px solid var(--border);"
                      onerror="this.style.display='none'">
               <?php else: ?>
-                <div style="width:38px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">💊</div>
+                <div style="width:38px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;"><i class="fas fa-pills"></i></div>
               <?php endif; ?>
             </td>
             <td><div class="med-name"><?= htmlspecialchars($r['medicine_name']) ?></div></td>
@@ -189,7 +209,7 @@ $rejectedCount = $rejected->get_result()->fetch_assoc()['c'];
         <?php endwhile; else: ?>
           <tr><td colspan="8">
             <div class="empty-state">
-              <span class="empty-icon">📋</span>
+              <span class="empty-icon"><i class="fas fa-clipboard-list"></i></span>
               <p>No requests yet. <a href="user_medicines.php" style="color:var(--accent)">Request a medicine →</a></p>
             </div>
           </td></tr>

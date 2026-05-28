@@ -1,15 +1,15 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/security.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+
+sendNoStoreHeaders();
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
-
-header('Cache-Control: no store, no cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
 
 $user_id    = $_SESSION['user_id'];
 $user_name  = $_SESSION['user_name'];
@@ -181,15 +181,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ══ RECOMMENDATIONS ══
     $recommendations = [];
-    if ($bmi >= 25)        $recommendations[] = ['⚖️', 'Maintain a balanced diet and regular exercise to achieve a healthy weight.'];
-    if ($bmi < 18.5)       $recommendations[] = ['🥗', 'Increase caloric intake with nutritious foods to reach a healthy weight.'];
-    if ($bp_risk >= 2)     $recommendations[] = ['🩺', 'Consult a doctor about your blood pressure. Reduce salt intake and exercise regularly.'];
-    if ($cvd_risk >= 10)   $recommendations[] = ['💓', 'Your 10-year heart disease risk is elevated. Consult a cardiologist.'];
-    if ($smoking)          $recommendations[] = ['🚭', 'Quitting smoking significantly reduces heart disease and cancer risk.'];
-    if ($diabetes)         $recommendations[] = ['💉', 'Manage blood sugar levels through diet, exercise, and medication if prescribed.'];
-    if ($total_chol >= 200)$recommendations[] = ['🥩', 'Reduce intake of saturated fats and cholesterol-rich foods.'];
-    if ($hdl_chol < 40)    $recommendations[] = ['🏃', 'Increase physical activity to raise HDL (good) cholesterol levels.'];
-    if (empty($recommendations)) $recommendations[] = ['🌟', 'Great job! Keep maintaining your healthy lifestyle habits.'];
+    if ($bmi >= 25)        $recommendations[] = ['fas fa-scale-balanced', 'Maintain a balanced diet and regular exercise to achieve a healthy weight.'];
+    if ($bmi < 18.5)       $recommendations[] = ['fas fa-apple-whole', 'Increase caloric intake with nutritious foods to reach a healthy weight.'];
+    if ($bp_risk >= 2)     $recommendations[] = ['fas fa-stethoscope', 'Consult a doctor about your blood pressure. Reduce salt intake and exercise regularly.'];
+    if ($cvd_risk >= 10)   $recommendations[] = ['fas fa-heart-pulse', 'Your 10-year heart disease risk is elevated. Consult a cardiologist.'];
+    if ($smoking)          $recommendations[] = ['fas fa-ban-smoking', 'Quitting smoking significantly reduces heart disease and cancer risk.'];
+    if ($diabetes)         $recommendations[] = ['fas fa-syringe', 'Manage blood sugar levels through diet, exercise, and medication if prescribed.'];
+    if ($total_chol >= 200)$recommendations[] = ['fas fa-utensils', 'Reduce intake of saturated fats and cholesterol-rich foods.'];
+    if ($hdl_chol < 40)    $recommendations[] = ['fas fa-person-running', 'Increase physical activity to raise HDL (good) cholesterol levels.'];
+    if (empty($recommendations)) $recommendations[] = ['fas fa-star', 'Great job! Keep maintaining your healthy lifestyle habits.'];
 
    // Save to database
 $source = 'self';
@@ -295,6 +295,7 @@ $save->close();
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Health Risk Check — Clinic</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -314,7 +315,7 @@ $save->close();
       <span><?= htmlspecialchars($user_name) ?></span>
       <span class="user-role">· Student</span>
     </div>
-    <a href="user_profile.php" class="btn btn-secondary btn-sm">⚙ Profile</a>
+    <a href="user_profile.php" class="btn btn-secondary btn-sm"><i class="fas fa-gear"></i> Profile</a>
     <a href="user_logout.php"  class="btn btn-secondary btn-sm">Sign Out</a>
   </div>
 </div>
@@ -323,12 +324,25 @@ $save->close();
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Navigation</div>
-      <a href="user_dashboard.php" class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
-      <a href="user_medicines.php" class="nav-item"><span class="nav-icon">💊</span> View Medicines</a>
-      <a href="user_requests.php"  class="nav-item"><span class="nav-icon">📋</span> My Requests</a>
-      <a href="health_check.php"   class="nav-item active"><span class="nav-icon">❤️</span> Health Check</a>
+      <a href="user_dashboard.php" class="nav-item"><span class="nav-icon"><i class="fas fa-house"></i></span> Dashboard</a>
+      <a href="user_medicines.php" class="nav-item"><span class="nav-icon"><i class="fas fa-pills"></i></span> View Medicines</a>
+      <a href="user_requests.php"  class="nav-item"><span class="nav-icon"><i class="fas fa-clipboard-list"></i></span> My Requests</a>
+      <a href="health_check.php"   class="nav-item active"><span class="nav-icon"><i class="fas fa-heart-pulse"></i></span> Health Check</a>
     </div>
     <div class="sidebar-footer">
+      <a href="user_profile.php" class="sidebar-profile">
+        <div class="sidebar-avatar">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div>
+          <div class="sidebar-profile-name">
+            <?= htmlspecialchars($user_name) ?>
+          </div>
+          <div class="sidebar-profile-role">
+            <?= htmlspecialchars($user['grade'] ?: 'Student') ?>
+          </div>
+        </div>
+      </a>
       <div class="sidebar-build">Student Portal v1.0</div>
       <div class="sidebar-build">© <?= date('Y') ?> ICAS School Clinic</div>
     </div>
@@ -338,7 +352,7 @@ $save->close();
 
     <div class="page-header">
       <div>
-        <h1>❤️ Health Risk Assessment</h1>
+        <h1><i class="fas fa-heart-pulse" style="color:var(--accent);margin-right:8px;"></i>Health Risk Assessment</h1>
         <p>Based on WHO standards & Framingham Heart Score</p>
       </div>
     </div>
@@ -352,7 +366,7 @@ $save->close();
 
       <!-- INPUT FORM -->
       <div class="form-card">
-        <h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:20px;">📋 Input Parameters</h3>
+        <h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:20px;"><i class="fas fa-clipboard-list" style="color:var(--accent);margin-right:8px;"></i>Input Parameters</h3>
 
         <form method="POST" action="health_check.php" id="healthForm">
           <div class="form-grid">
@@ -442,7 +456,7 @@ $save->close();
                   <input type="checkbox" name="bp_treated" value="1"
                          <?= isset($_POST['bp_treated'])?'checked':'' ?>
                          style="width:16px;height:16px;accent-color:var(--accent);">
-                  💊 Currently on Blood Pressure Medication
+                  <i class="fas fa-pills"></i> Currently on Blood Pressure Medication
                 </label>
 
               </div>
@@ -541,11 +555,11 @@ $save->close();
         <!-- Recommendations -->
         <div class="form-card">
           <h3 style="font-family:'Playfair Display',serif;font-size:16px;margin-bottom:16px;">
-            💡 Recommendations
+            <i class="fas fa-lightbulb" style="color:var(--accent);margin-right:8px;"></i>Recommendations
           </h3>
           <?php foreach ($result['recommendations'] as $rec): ?>
             <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
-              <span style="font-size:20px;"><?= $rec[0] ?></span>
+              <span style="font-size:20px;color:var(--accent);width:22px;text-align:center;"><i class="<?= htmlspecialchars($rec[0]) ?>"></i></span>
               <span style="font-size:13px;color:var(--text2);line-height:1.5;"><?= htmlspecialchars($rec[1]) ?></span>
             </div>
           <?php endforeach; ?>
@@ -559,7 +573,7 @@ $save->close();
       <?php else: ?>
         <!-- Empty State -->
         <div class="form-card" style="text-align:center;padding:48px 32px;">
-          <div style="font-size:64px;margin-bottom:16px;">❤️</div>
+          <div style="font-size:64px;margin-bottom:16px;color:var(--accent);"><i class="fas fa-heart-pulse"></i></div>
           <h3 style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:8px;">
             Ready to Check Your Health?
           </h3>
@@ -569,16 +583,16 @@ $save->close();
           </p>
           <div style="margin-top:24px;display:flex;flex-direction:column;gap:8px;text-align:left;">
             <div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;">
-              ✅ BMI Assessment (WHO)
+              <i class="fas fa-circle-check" style="color:var(--green);"></i> BMI Assessment (WHO)
             </div>
             <div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;">
-              ✅ Blood Pressure (AHA 2017)
+              <i class="fas fa-circle-check" style="color:var(--green);"></i> Blood Pressure (AHA 2017)
             </div>
             <div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;">
-              ✅ 10-Year Heart Risk (Framingham)
+              <i class="fas fa-circle-check" style="color:var(--green);"></i> 10-Year Heart Risk (Framingham)
             </div>
             <div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;">
-              ✅ Personalized Recommendations
+              <i class="fas fa-circle-check" style="color:var(--green);"></i> Personalized Recommendations
             </div>
           </div>
         </div>
